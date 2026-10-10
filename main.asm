@@ -13,7 +13,7 @@ extern SDL_DestroyRenderer
 extern SDL_DestroyWindow
 extern SDL_Delay
 section .data
-    title db "Game Example"
+    title db "SquareBoom", 0
 section .bss
     window resq 1
     renderer resq 1
@@ -23,33 +23,37 @@ section .text
 global WinMain
 WinMain:
     push rbp
-    mov rbp,rsp
+    mov rbp,rsp 
     sub rsp,48
+    
     mov ecx,0x20
     call SDL_Init
     test eax,eax
     js exit
+
+    ; SDL3: SDL_CreateWindow(title, w, h, flags) - 4 arguments
     mov rcx,title
-    mov rdx,0x1FFF0000
-    mov r8,0x1FFF0000
-    mov r9,1300
-    mov qword [rsp + 32],1000
-    mov qword [rsp + 40],4
+    mov rdx,1300        ; Width
+    mov r8,1000         ; Height
+    mov r9,4            ; Flags
     call SDL_CreateWindow
     mov [window],rax
     test rax,rax
     jz exit
+
+    ; SDL3: SDL_CreateRenderer(window, name) - 2 arguments (name = NULL)
     mov rcx,[window]
-    mov rdx,-1
-    mov r8,6
+    xor rdx,rdx         ; NULL renderer name
     call SDL_CreateRenderer
     mov [renderer],rax
+
     mov dword [square_rect + 0],650
     mov dword [square_rect + 4],450
-    mov dword [square_rect + 8],70
-    mov dword [square_rect + 12],70
+    mov dword [square_rect + 8],150
+    mov dword [square_rect + 12],150
+
 game_loop:
-    mov rcx,event
+    mov rcx,event 
     call SDL_PollEvent
     test eax,eax
     jz render_scene
@@ -68,6 +72,7 @@ game_loop:
     cmp eax,7
     je move_right
     jmp game_loop
+
 move_up:
     sub dword [square_rect + 4],15
     jmp game_loop
@@ -80,6 +85,7 @@ move_left:
 move_right:
     add dword [square_rect + 0],15
     jmp game_loop
+
 render_scene:
     mov rcx,[renderer]
     mov rdx,20
@@ -87,22 +93,27 @@ render_scene:
     mov r9,35
     mov qword [rsp + 32],255
     call SDL_SetRenderDrawColor
+    
     mov rcx,[renderer]
     mov rdx,square_rect
     call SDL_RenderFillRect
+    
     mov rcx,[renderer]
     call SDL_RenderPresent
+    
     mov ecx,16
     call SDL_Delay
     jmp game_loop
+
 clean_exit:
     mov rcx,[renderer]
     call SDL_DestroyRenderer
     mov rcx,[window]
     call SDL_DestroyWindow
     call SDL_Quit
+
 exit:
     xor eax,eax
     add rsp,40
     pop rbp
-    ret 
+    ret
