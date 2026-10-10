@@ -12,108 +12,109 @@ extern SDL_Quit
 extern SDL_DestroyRenderer
 extern SDL_DestroyWindow
 extern SDL_Delay
+
 section .data
     title db "SquareBoom", 0
+
 section .bss
     window resq 1
     renderer resq 1
     event resb 56
     square_rect resd 4
+
 section .text
 global WinMain
 WinMain:
     push rbp
-    mov rbp,rsp 
-    sub rsp,48
+    mov rbp, rsp 
+    sub rsp, 48
     
-    mov ecx,0x20
+    mov ecx, 0x20
     call SDL_Init
-    test eax,eax
+    test eax, eax
     js exit
 
-    ; SDL3: SDL_CreateWindow(title, w, h, flags) - 4 arguments
-    mov rcx,title
-    mov rdx,1300        ; Width
-    mov r8,1000         ; Height
-    mov r9,4            ; Flags
+    mov rcx, title
+    mov rdx, 1300
+    mov r8, 1000
+    mov r9, 4
     call SDL_CreateWindow
-    mov [window],rax
-    test rax,rax
+    mov [window], rax
+    test rax, rax
     jz exit
 
-    ; SDL3: SDL_CreateRenderer(window, name) - 2 arguments (name = NULL)
-    mov rcx,[window]
-    xor rdx,rdx         ; NULL renderer name
+    mov rcx, [window]
+    xor rdx, rdx
     call SDL_CreateRenderer
-    mov [renderer],rax
+    mov [renderer], rax
 
-    mov dword [square_rect + 0],650
-    mov dword [square_rect + 4],450
-    mov dword [square_rect + 8],150
-    mov dword [square_rect + 12],150
+    mov dword [square_rect + 0], 650
+    mov dword [square_rect + 4], 450
+    mov dword [square_rect + 8], 150
+    mov dword [square_rect + 12], 150
 
 game_loop:
-    mov rcx,event 
+    mov rcx, event 
     call SDL_PollEvent
-    test eax,eax
+    test eax, eax
     jz render_scene
-    mov eax,[event]
-    cmp eax,0x100
+    mov eax, [event]
+    cmp eax, 0x100
     je clean_exit
-    cmp eax,0x300
+    cmp eax, 0x300
     jne game_loop
-    mov eax,[event + 16]
-    cmp eax,26
+    mov eax, [event + 16]
+    cmp eax, 26
     je move_up
-    cmp eax,22
+    cmp eax, 22
     je move_down
-    cmp eax,4
+    cmp eax, 4
     je move_left
-    cmp eax,7
+    cmp eax, 7
     je move_right
     jmp game_loop
 
 move_up:
-    sub dword [square_rect + 4],15
+    sub dword [square_rect + 4], 15
     jmp game_loop
 move_down:
-    add dword [square_rect + 4],15
+    add dword [square_rect + 4], 15
     jmp game_loop
 move_left:
-    sub dword [square_rect + 0],15
+    sub dword [square_rect + 0], 15
     jmp game_loop
 move_right:
-    add dword [square_rect + 0],15
+    add dword [square_rect + 0], 15
     jmp game_loop
 
 render_scene:
-    mov rcx,[renderer]
-    mov rdx,20
-    mov r8,25
-    mov r9,35
-    mov qword [rsp + 32],255
+    mov rcx, [renderer]
+    mov rdx, 20
+    mov r8, 25
+    mov r9, 35
+    mov qword [rsp + 32], 255
     call SDL_SetRenderDrawColor
     
-    mov rcx,[renderer]
-    mov rdx,square_rect
+    mov rcx, [renderer]
+    mov rdx, square_rect
     call SDL_RenderFillRect
     
-    mov rcx,[renderer]
+    mov rcx, [renderer]
     call SDL_RenderPresent
     
-    mov ecx,16
+    mov ecx, 16
     call SDL_Delay
     jmp game_loop
 
 clean_exit:
-    mov rcx,[renderer]
+    mov rcx, [renderer]
     call SDL_DestroyRenderer
-    mov rcx,[window]
+    mov rcx, [window]
     call SDL_DestroyWindow
     call SDL_Quit
 
 exit:
-    xor eax,eax
-    add rsp,40
+    xor eax, eax
+    add rsp, 40
     pop rbp
     ret
